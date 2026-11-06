@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Curvas paramétricas: tiro desde un rascacielos y dron en espiral">
+<meta property="og:description" content="Ecuaciones paramétricas, derivadas, velocidad, aceleración, tangente y longitud de arco, con simulación interactiva.">
+<title>Curvas paramétricas | TecNM</title>
+<meta name="description" content="Resolución paso a paso de dos problemas de curvas paramétricas: salto de Moira y trayectoria espiral de un dron.">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+
+<style>
+  body { background: radial-gradient(1200px 600px at 10% -10%, #0e2a52 0%, transparent 60%),
+                     radial-gradient(900px 500px at 100% 0%, #0b3b7a55 0%, transparent 60%), #070d1a;
+         color: #dbe5f5; min-height: 100vh; }
+  .glass { background: rgba(255,255,255,.04); border: 1px solid rgba(120,160,230,.18);
+           backdrop-filter: blur(10px); box-shadow: 0 8px 30px rgba(0,0,0,.35); border-radius: 1rem; }
+  .tab-btn { transition: all .2s; }
+  .tab-btn.active { background: #0b5cbf; color: #fff; box-shadow: 0 0 0 1px #5ea3ff66, 0 6px 20px #0b5cbf66; }
+  details.step { border: 1px solid rgba(120,160,230,.18); border-radius: .75rem; background: rgba(8,16,34,.55); margin-bottom: .75rem; }
+  details.step > summary { cursor: pointer; padding: .8rem 1rem; font-weight: 600; list-style: none; display: flex; gap: .6rem; align-items: center; }
+  details.step > summary::-webkit-details-marker { display: none; }
+  details.step > summary::before { content: "▸"; color: #5ea3ff; transition: transform .2s; }
+  details.step[open] > summary::before { transform: rotate(90deg); }
+  details.step .body { padding: 0 1rem 1rem 1rem; line-height: 1.75; color: #c6d4ea; }
+  .formula { background: rgba(11,92,191,.12); border-left: 3px solid #1b6fd1; padding: .5rem 1rem; margin: .6rem 0; border-radius: .4rem; overflow-x: auto; }
+  .ok { color: #4ade80; } .warn { color: #fbbf24; }
+  table.data { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.data th { background: #0b3b7a; color: #fff; padding: .5rem .75rem; text-align: right; position: sticky; top: 0; }
+  table.data td { padding: .4rem .75rem; text-align: right; border-bottom: 1px solid rgba(120,160,230,.12); }
+  table.data tr:hover td { background: rgba(94,163,255,.08); }
+  table.data tr.pt td { background: rgba(251,191,36,.12); font-weight: 700; }
+  .chip { display:inline-block; padding:.1rem .6rem; border-radius:999px; font-size:.75rem; border:1px solid #5ea3ff55; color:#9cc6ff; }
+  canvas { touch-action: none; width: 100%; height: 420px; border-radius: .75rem; background: #050a16; }
+  .btn { padding:.4rem .9rem; border-radius:.5rem; background:#0b5cbf; color:#fff; font-size:.85rem; }
+  .btn.sec { background: rgba(255,255,255,.08); }
+  .btn:hover { filter: brightness(1.15); }
+  input[type=number] { background:#0a1730; border:1px solid #2a4a80; color:#dbe5f5; border-radius:.4rem; padding:.3rem .5rem; }
+  input[type=range] { width: 100%; accent-color: #3b82f6; }
+  .kv { display:flex; justify-content:space-between; gap:.5rem; padding:.5rem .75rem; font-size:.875rem; }
+  .kv span:last-child { font-family: ui-monospace, monospace; text-align:right; }
+  code { background: rgba(255,255,255,.08); padding: 0 .3rem; border-radius: .25rem; }
+  .katex { font-size: 1.05em; }
+</style>
+</head>
+
+<body class="antialiased">
+
+<header class="sticky top-0 z-30 border-b border-blue-900/40 bg-[#070d1a]/85 backdrop-blur">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
+    <div>
+      <p class="text-xs tracking-widest text-blue-400 uppercase">Tecnológico Nacional de México · Cálculo Vectorial</p>
+      <h1 class="text-lg md:text-xl font-bold text-white">Curvas paramétricas: movimiento en el plano</h1>
+    </div>
+    <nav class="flex gap-2 flex-wrap" aria-label="Problemas">
+      <button class="tab-btn active px-4 py-2 rounded-lg text-sm bg-white/5" data-tab="resumen">Resumen</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm bg-white/5" data-tab="p1">Problema 1: Salto de Moira</button>
+      <button class="tab-btn px-4 py-2 rounded-lg text-sm bg-white/5" data-tab="p2">Problema 2: Dron de inventario</button>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+<!-- ===================== RESUMEN ===================== -->
+<section id="tab-resumen" class="tab-panel space-y-6">
+  <div class="glass p-6">
+    <h2 class="text-2xl font-bold text-white mb-2">Resumen ejecutivo</h2>
+    <p class="text-slate-300 leading-relaxed">
+      Dos problemas de curvas planas dadas en forma paramétrica $(x(t),\,y(t))$. En ambos se obtiene la trayectoria,
+      se deriva respecto a $t$ para hallar velocidad y aceleración, y se interpreta el resultado físicamente.
+    </p>
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+      <div class="glass p-4"><span class="chip">Problema 1</span>
+        <p class="mt-2 text-sm">Tiro horizontal desde 250 m con $v_0=5$ m/s y $g=9.8$ m/s². Resultado: $x=5t$, $y=250-4.9t^2$, tiempo de caída $t=\tfrac{50}{7}\approx7.143$ s y alcance $x=\tfrac{250}{7}\approx35.71$ m.</p></div>
+      <div class="glass p-4"><span class="chip">Problema 2</span>
+        <p class="mt-2 text-sm">$x=e^t\cos t$, $y=e^t\sin t$, $t\in[0,\pi/2]$. Es una espiral logarítmica $r=e^\theta$. La longitud de arco es $\sqrt2\,(e^{\pi/2}-1)\approx5.389$ m.</p></div>
+    </div>
+  </div>
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-3">Herramientas usadas</h3>
+    <ul class="list-disc pl-6 space-y-2 text-slate-300">
+      <li><strong>Eliminación del parámetro:</strong> despejar $t$ de una ecuación y sustituir en la otra, o reconocer coordenadas polares.</li>
+      <li><strong>Pendiente de una curva paramétrica:</strong> $\dfrac{dy}{dx}=\dfrac{dy/dt}{dx/dt}$ cuando $dx/dt\neq0$.</li>
+      <li><strong>Velocidad y aceleración:</strong> $\vec v=\vec r\,'(t)$, $\vec a=\vec r\,''(t)$, rapidez $|\vec v|=\sqrt{x'^2+y'^2}$.</li>
+      <li><strong>Longitud de arco:</strong> $L=\displaystyle\int_a^b\sqrt{x'(t)^2+y'(t)^2}\,dt$.</li>
+    </ul>
+    <div class="flex gap-2 mt-4">
+      <button class="btn" data-go="p1">Ir al Problema 1</button>
+      <button class="btn sec" data-go="p2">Ir al Problema 2</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROBLEMA 1 ===================== -->
+<section id="tab-p1" class="tab-panel hidden space-y-6">
+  <div class="glass p-6">
+    <span class="chip">Problema 1</span>
+    <h2 class="text-2xl font-bold text-white mt-2">El salto de Moira desde Trumpet Tower</h2>
+    <p class="mt-3 text-slate-300 leading-relaxed">
+      Moira corre a 5 m/s y salta del edificio “Trumpet Tower” de 250 m de altura. Con $g=-9.8$ m/s², se pide una ecuación paramétrica del vuelo,
+      (a) el tiempo en llegar al suelo y (b) a qué distancia de la base debe colocarse el equipo de seguridad.
+    </p>
+  </div>
+
+  <div class="glass p-6">
+    <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-white">Desarrollo paso a paso</h3>
+      <div class="flex gap-2">
+        <button class="btn sec" data-expand="p1-steps">Expandir todo</button>
+        <button class="btn sec" data-collapse="p1-steps">Colapsar todo</button>
+      </div>
+    </div>
+    <div id="p1-steps">
+      <details class="step" open>
+        <summary>Paso 1. Modelo: origen y condiciones iniciales</summary>
+        <div class="body">
+          Se coloca el origen en la base de la torre y el eje $x$ en el suelo. Moira sale del borde de la azotea:
+          <div class="formula">$\vec r(0)=(0,\,250)$</div>
+          Al saltar corriendo, su velocidad inicial es horizontal:
+          <div class="formula">$\vec v(0)=(5,\,0)$ m/s</div>
+          La única aceleración es la gravedad (se desprecia el aire):
+          <div class="formula">$\vec a(t)=(0,\,-9.8)$ m/s²</div>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>Paso 2. Integrar la aceleración para obtener $\vec v(t)$ y $\vec r(t)$</summary>
+        <div class="body">
+          Componente horizontal ($a_x=0$):
+          <div class="formula">$v_x=\int 0\,dt = C_1,\quad v_x(0)=5\Rightarrow v_x=5$</div>
+          <div class="formula">$x=\int 5\,dt=5t+C_2,\quad x(0)=0\Rightarrow \boxed{x(t)=5t}$</div>
+          Componente vertical ($a_y=-9.8$):
+          <div class="formula">$v_y=\int -9.8\,dt=-9.8t+C_3,\quad v_y(0)=0\Rightarrow v_y=-9.8t$</div>
+          <div class="formula">$y=\int -9.8t\,dt=-4.9t^2+C_4,\quad y(0)=250\Rightarrow \boxed{y(t)=250-4.9t^2}$</div>
+          Ecuación paramétrica del vuelo:
+          <div class="formula">$\vec r(t)=\big(5t,\;250-4.9t^2\big),\qquad t\ge0$</div>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>Paso 3. Trayectoria cartesiana (eliminar el parámetro)</summary>
+        <div class="body">
+          De $x=5t$ se despeja $t=\dfrac{x}{5}$ y se sustituye en $y$:
+          <div class="formula">$y=250-4.9\left(\dfrac{x}{5}\right)^2=250-\dfrac{4.9}{25}x^2=250-0.196\,x^2$</div>
+          Es una parábola que abre hacia abajo con vértice en $(0,250)$, la azotea. Coincide con el dibujo del enunciado.
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>a) Tiempo en llegar al suelo</summary>
+        <div class="body">
+          Llega al suelo cuando $y(t)=0$:
+          <div class="formula">$250-4.9t^2=0\;\Rightarrow\; t^2=\dfrac{250}{4.9}=\dfrac{2500}{49}$</div>
+          <div class="formula">$t=\sqrt{\dfrac{2500}{49}}=\dfrac{50}{7}\approx 7.143\ \text{s}$</div>
+          Se descarta la raíz negativa porque $t\ge0$.
+          <p class="ok font-semibold">Respuesta (a): $t=\tfrac{50}{7}\approx7.14$ s.</p>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>b) Distancia de la base donde poner el equipo de seguridad</summary>
+        <div class="body">
+          Se evalúa $x(t)$ en el instante de aterrizaje:
+          <div class="formula">$x\!\left(\tfrac{50}{7}\right)=5\cdot\dfrac{50}{7}=\dfrac{250}{7}\approx35.71\ \text{m}$</div>
+          Comprobación con la cartesiana: $y=250-0.196\,(35.714)^2=250-250=0$ ✓
+          <p class="ok font-semibold">Respuesta (b): a $\tfrac{250}{7}\approx35.7$ m de la base de la torre.</p>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>Extra. Velocidad al aterrizar</summary>
+        <div class="body">
+          <div class="formula">$\vec v\!\left(\tfrac{50}{7}\right)=\big(5,\;-9.8\cdot\tfrac{50}{7}\big)=(5,\,-70)$ m/s</div>
+          <div class="formula">$|\vec v|=\sqrt{5^2+70^2}=\sqrt{4925}\approx70.18\ \text{m/s}\ (\approx253\ \text{km/h})$</div>
+          Con ese resultado conviene que el equipo de seguridad esté bien diseñado para esa velocidad. El ángulo de entrada respecto al suelo es $\arctan(70/5)\approx85.9^\circ$.
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-1">Simulador del salto</h3>
+    <p class="text-sm text-slate-400 mb-4">Cambiá los datos y mirá cómo se recalculan el tiempo y el alcance. Los valores iniciales son los del enunciado.</p>
+    <div class="flex flex-wrap gap-3 items-end text-sm mb-4">
+      <label>Altura h (m) <input id="p1-h" type="number" step="10" min="1" value="250" class="block mt-1 w-28"></label>
+      <label>Velocidad v₀ (m/s) <input id="p1-v" type="number" step="0.5" min="0" value="5" class="block mt-1 w-28"></label>
+      <label>Gravedad g (m/s²) <input id="p1-g" type="number" step="0.1" min="0.1" value="9.8" class="block mt-1 w-28"></label>
+      <button id="p1-reset" class="btn sec">Datos del enunciado</button>
+    </div>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 min-w-0">
+        <canvas id="cv-p1" aria-label="Trayectoria parabólica del salto"></canvas>
+        <div class="flex items-center gap-3 mt-3">
+          <button id="p1-play" class="btn">▶ Reproducir</button>
+          <input id="p1-t" type="range" min="0" max="1" step="0.001" value="0" aria-label="Tiempo">
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Escala igual en ambos ejes. Verde: equipo de seguridad. Azul: Moira.</p>
+      </div>
+      <div class="glass divide-y divide-blue-900/40 self-start" id="p1-out"></div>
+    </div>
+  </div>
+
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-3">Tabulación de la trayectoria</h3>
+    <div class="overflow-x-auto max-h-96 rounded-lg border border-blue-900/40">
+      <table class="data" id="p1-table">
+        <thead><tr><th>t (s)</th><th>x = 5t (m)</th><th>y = 250 − 4.9t² (m)</th><th>vₓ</th><th>v_y = −9.8t</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="text-xs text-slate-400 mt-2">La tabla sigue los datos del simulador. La fila amarilla es el aterrizaje.</p>
+  </div>
+</section>
+
+<!-- ===================== PROBLEMA 2 ===================== -->
+<section id="tab-p2" class="tab-panel hidden space-y-6">
+  <div class="glass p-6">
+    <span class="chip">Problema 2</span>
+    <h2 class="text-2xl font-bold text-white mt-2">Dron de inventario en un almacén</h2>
+    <p class="mt-3 text-slate-300 leading-relaxed">
+      La posición del dron es $x(t)=e^t\cos t$, $y(t)=e^t\sin t$, con $t$ en segundos y distancias en metros, para $t\in[0,\pi/2]$.
+      Determinar: (1) la ecuación cartesiana, (2) la pendiente en $t=\pi/4$, (3) velocidad y aceleración en $t=\pi/4$,
+      (4) la recta tangente en $t=\pi/4$ y (5) la longitud de arco.
+    </p>
+    <p class="mt-2 text-sm text-slate-400">Nota: el enunciado la llama “helicoidal”, pero proyectada en el plano es una espiral logarítmica, como se ve en el punto 1.</p>
+  </div>
+
+  <div class="glass p-6">
+    <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-white">Desarrollo por incisos</h3>
+      <div class="flex gap-2">
+        <button class="btn sec" data-expand="p2-steps">Expandir todo</button>
+        <button class="btn sec" data-collapse="p2-steps">Colapsar todo</button>
+      </div>
+    </div>
+    <div id="p2-steps">
+
+      <details class="step" open>
+        <summary>1. Ecuación cartesiana de la trayectoria</summary>
+        <div class="body">
+          Se elevan al cuadrado y se suman las dos ecuaciones:
+          <div class="formula">$x^2+y^2=e^{2t}\cos^2t+e^{2t}\sin^2t=e^{2t}(\cos^2t+\sin^2t)=e^{2t}$</div>
+          Entonces $\sqrt{x^2+y^2}=e^t$ (positivo), es decir $t=\ln\sqrt{x^2+y^2}=\tfrac12\ln(x^2+y^2)$.
+          Por otro lado, dividiendo $y/x$:
+          <div class="formula">$\dfrac{y}{x}=\dfrac{e^t\sin t}{e^t\cos t}=\tan t\;\Rightarrow\; t=\arctan\dfrac{y}{x}$ (válido en el primer cuadrante)</div>
+          Igualando las dos expresiones de $t$:
+          <div class="formula">$\boxed{\ \ln\sqrt{x^2+y^2}=\arctan\!\left(\dfrac{y}{x}\right)\ }\qquad\text{o bien}\qquad\sqrt{x^2+y^2}=e^{\arctan(y/x)}$</div>
+          En coordenadas polares es $r=e^{\theta}$, con $\theta=t\in[0,\pi/2]$: una espiral logarítmica.
+          Va desde $(1,0)$ en $t=0$ hasta $(0,\,e^{\pi/2})\approx(0,\,4.810)$ en $t=\pi/2$ (ahí $x=0$ y la forma $\arctan(y/x)$ se interpreta como $\pi/2$).
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>Derivadas necesarias: $x'(t)$ y $y'(t)$</summary>
+        <div class="body">
+          Regla del producto:
+          <div class="formula">$x'(t)=e^t\cos t-e^t\sin t=e^t(\cos t-\sin t)$</div>
+          <div class="formula">$y'(t)=e^t\sin t+e^t\cos t=e^t(\sin t+\cos t)$</div>
+          Segundas derivadas:
+          <div class="formula">$x''(t)=e^t(\cos t-\sin t)+e^t(-\sin t-\cos t)=-2e^t\sin t$</div>
+          <div class="formula">$y''(t)=e^t(\sin t+\cos t)+e^t(\cos t-\sin t)=2e^t\cos t$</div>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>2. Pendiente de la curva en $t=\pi/4$</summary>
+        <div class="body">
+          <div class="formula">$\dfrac{dy}{dx}=\dfrac{y'(t)}{x'(t)}=\dfrac{e^t(\sin t+\cos t)}{e^t(\cos t-\sin t)}=\dfrac{\cos t+\sin t}{\cos t-\sin t}=\dfrac{1+\tan t}{1-\tan t}=\tan\!\left(t+\tfrac{\pi}{4}\right)$</div>
+          En $t=\pi/4$: $\cos\tfrac{\pi}{4}=\sin\tfrac{\pi}{4}=\tfrac{\sqrt2}{2}$, entonces
+          <div class="formula">$x'(\pi/4)=e^{\pi/4}\left(\tfrac{\sqrt2}{2}-\tfrac{\sqrt2}{2}\right)=0,\qquad y'(\pi/4)=e^{\pi/4}\sqrt2\neq0$</div>
+          El denominador se anula y el numerador no: la pendiente no está definida (tiende a $\infty$), es decir $\tan(\pi/2)$.
+          <p class="warn font-semibold">Resultado: en $t=\pi/4$ la tangente es <strong>vertical</strong>.</p>
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>3. Velocidad y aceleración en $t=\pi/4$</summary>
+        <div class="body">
+          Posición en ese instante, con $e^{\pi/4}\approx2.1933$:
+          <div class="formula">$\vec r(\pi/4)=\left(e^{\pi/4}\tfrac{\sqrt2}{2},\;e^{\pi/4}\tfrac{\sqrt2}{2}\right)\approx(1.551,\;1.551)$ m</div>
+          Velocidad $\vec v=(x',y')$:
+          <div class="formula">$\vec v(\pi/4)=\big(0,\;\sqrt2\,e^{\pi/4}\big)\approx(0,\;3.102)$ m/s</div>
+          <div class="formula">$|\vec v(\pi/4)|=\sqrt2\,e^{\pi/4}\approx3.102$ m/s</div>
+          Aceleración $\vec a=(x'',y'')=2e^t(-\sin t,\cos t)$:
+          <div class="formula">$\vec a(\pi/4)=2e^{\pi/4}\left(-\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2}\right)=e^{\pi/4}\big(-\sqrt2,\;\sqrt2\big)\approx(-3.102,\;3.102)$ m/s²</div>
+          <div class="formula">$|\vec a(\pi/4)|=2e^{\pi/4}\approx4.387$ m/s²</div>
+          Verificación: $\vec v\cdot\vec a=0\cdot(-3.102)+3.102\cdot3.102\approx9.62\neq0$, así que el dron además aumenta su rapidez (la rapidez es $\sqrt2e^t$, creciente).
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>4. Ecuación de la recta tangente en $t=\pi/4$</summary>
+        <div class="body">
+          El punto de tangencia es $P=\left(\tfrac{\sqrt2}{2}e^{\pi/4},\,\tfrac{\sqrt2}{2}e^{\pi/4}\right)$ y la dirección es $\vec v=(0,\,\sqrt2e^{\pi/4})$, vertical.
+          Una recta vertical no tiene forma $y=mx+b$; su ecuación es $x=\text{constante}$:
+          <div class="formula">$\boxed{\,x=\dfrac{\sqrt2}{2}\,e^{\pi/4}=\dfrac{e^{\pi/4}}{\sqrt2}\approx1.551\,}$</div>
+          En forma paramétrica: $(x,y)=\left(1.551,\;1.551+3.102\,s\right)$, $s\in\mathbb R$.
+        </div>
+      </details>
+
+      <details class="step">
+        <summary>5. Longitud de arco para $t\in[0,\pi/2]$</summary>
+        <div class="body">
+          <div class="formula">$L=\displaystyle\int_0^{\pi/2}\sqrt{x'(t)^2+y'(t)^2}\,dt$</div>
+          Integrando:
+          <div class="formula">$x'^2+y'^2=e^{2t}\big[(\cos t-\sin t)^2+(\cos t+\sin t)^2\big]=e^{2t}\big[2\cos^2t+2\sin^2t\big]=2e^{2t}$</div>
+          Por lo tanto la rapidez es $\sqrt{2e^{2t}}=\sqrt2\,e^t$ y
+          <div class="formula">$L=\sqrt2\displaystyle\int_0^{\pi/2}e^t\,dt=\sqrt2\,\big[e^t\big]_0^{\pi/2}=\sqrt2\,\big(e^{\pi/2}-1\big)$</div>
+          <div class="formula">$L\approx1.41421\,(4.81048-1)=1.41421\cdot3.81048\approx5.389\ \text{m}$</div>
+          <p class="ok font-semibold">Respuesta: $L=\sqrt2\,(e^{\pi/2}-1)\approx5.389$ m.</p>
+          El visor de abajo compara este valor con una integración numérica (Simpson).
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-1">Visor del recorrido del dron</h3>
+    <p class="text-sm text-slate-400 mb-4">Movés el instante $t$ y ves el punto, la velocidad (amarillo), la aceleración (rojo) y la recta tangente (punteada).</p>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 min-w-0">
+        <canvas id="cv-p2" aria-label="Espiral logarítmica del dron"></canvas>
+        <div class="flex items-center gap-3 mt-3">
+          <button id="p2-play" class="btn">▶ Reproducir</button>
+          <input id="p2-t" type="range" min="0" max="1.5707963" step="0.0005" value="0.7853982" aria-label="Parámetro t">
+          <button id="p2-pi4" class="btn sec whitespace-nowrap">t = π/4</button>
+        </div>
+      </div>
+      <div class="glass divide-y divide-blue-900/40 self-start" id="p2-out"></div>
+    </div>
+  </div>
+
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-3">Tabla de valores</h3>
+    <div class="overflow-x-auto rounded-lg border border-blue-900/40">
+      <table class="data" id="p2-table">
+        <thead><tr><th>t</th><th>x</th><th>y</th><th>vₓ</th><th>v_y</th><th>|v|</th><th>aₓ</th><th>a_y</th><th>dy/dx</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="glass p-6">
+    <h3 class="text-xl font-semibold text-white mb-3">Cómo verificar en GeoGebra / Desmos</h3>
+    <ul class="list-disc pl-6 space-y-1 text-slate-300">
+      <li>Curva: <code>Curva(e^t cos(t), e^t sin(t), t, 0, π/2)</code> (GeoGebra) o <code>(e^t cos(t), e^t sin(t))</code> con <code>0≤t≤π/2</code> (Desmos).</li>
+      <li>Punto: <code>P=(e^(π/4) cos(π/4), e^(π/4) sin(π/4))</code>; debe dar (1.551, 1.551).</li>
+      <li>Longitud: <code>LongitudCurva(c, 0, π/2)</code>; debe dar 5.389.</li>
+      <li>Tangente: <code>Tangente(P, c)</code>; debe ser la recta vertical <code>x = 1.551</code>.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-slate-500">
+  Reporte de Cálculo Vectorial · Tecnológico Nacional de México · Fecha de entrega: 16/11/2026<br><a href="index.html" class="text-blue-400 hover:underline">← Entrega anterior: Rectas en el espacio</a>
+</footer>
+
+<script>
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const el = id => document.getElementById(id);
+const fmt = (n, d = 3) => { const k = Math.pow(10, d); return (Math.round(n * k) / k).toString(); };
+
+/* Navegación por pestañas */
+const tabs = document.querySelectorAll('.tab-btn');
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + name));
+  tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+  requestAnimationFrame(() => { drawP1(); drawP2(); });   // los canvas ocultos no tienen tamaño
+}
+tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.go)));
+document.querySelectorAll('[data-expand]').forEach(b => b.addEventListener('click',
+  () => document.querySelectorAll('#' + b.dataset.expand + ' details').forEach(d => d.open = true)));
+document.querySelectorAll('[data-collapse]').forEach(b => b.addEventListener('click',
+  () => document.querySelectorAll('#' + b.dataset.collapse + ' details').forEach(d => d.open = false)));
+
+/* Lienzo 2D con escala igual en ambos ejes, ajustado a un rectángulo del mundo */
+function setupCanvas(canvas, bounds) {
+  const dpr = window.devicePixelRatio || 1, W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W) return null;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const g = canvas.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const pad = 36, xr = bounds.xmax - bounds.xmin, yr = bounds.ymax - bounds.ymin;
+  const s = Math.min((W - 2 * pad) / xr, (H - 2 * pad) / yr);
+  const ox = W / 2 - s * (bounds.xmin + bounds.xmax) / 2, oy = H / 2 + s * (bounds.ymin + bounds.ymax) / 2;
+  const X = x => ox + x * s, Y = y => oy - y * s;
+  const line = (a, b, col, w = 1, dash) => { g.beginPath(); g.setLineDash(dash || []); g.strokeStyle = col; g.lineWidth = w;
+    g.moveTo(X(a[0]), Y(a[1])); g.lineTo(X(b[0]), Y(b[1])); g.stroke(); g.setLineDash([]); };
+  const dot = (p, col, r = 5) => { g.fillStyle = col; g.beginPath(); g.arc(X(p[0]), Y(p[1]), r, 0, 7); g.fill(); };
+  const text = (p, str, col = '#dbe5f5', dx = 8, dy = -8) => { g.fillStyle = col; g.font = '12px sans-serif'; g.fillText(str, X(p[0]) + dx, Y(p[1]) + dy); };
+  const arrow = (a, b, col) => {
+    line(a, b, col, 2.5);
+    const ang = Math.atan2(Y(b[1]) - Y(a[1]), X(b[0]) - X(a[0])), hx = X(b[0]), hy = Y(b[1]);
+    g.fillStyle = col; g.beginPath(); g.moveTo(hx, hy);
+    g.lineTo(hx - 10 * Math.cos(ang - 0.4), hy - 10 * Math.sin(ang - 0.4));
+    g.lineTo(hx - 10 * Math.cos(ang + 0.4), hy - 10 * Math.sin(ang + 0.4)); g.closePath(); g.fill();
+  };
+  return { g, W, H, s, X, Y, line, dot, text, arrow };
+}
+
+/* =========================================================
+   PROBLEMA 1 — Tiro horizontal
+   x(t)=v0 t,  y(t)=h - (g/2) t²
+   ========================================================= */
+const p1 = { tNow: 0, playing: false, raf: 0 };
+function p1Params() {
+  const h = Math.max(1, parseFloat(el('p1-h').value) || 250);
+  const v0 = Math.max(0, parseFloat(el('p1-v').value) || 0);
+  const g = Math.max(0.1, parseFloat(el('p1-g').value) || 9.8);
+  const tf = Math.sqrt(2 * h / g);
+  return { h, v0, g, tf, xf: v0 * tf, vyf: -g * tf };
+}
+function drawP1() {
+  const q = p1Params(), t = p1.tNow * q.tf;
+  const xmax = Math.max(q.xf * 1.15, q.h * 0.25, 10);
+  const c = setupCanvas(el('cv-p1'), { xmin: -xmax * 0.35, xmax: xmax, ymin: -q.h * 0.06, ymax: q.h * 1.08 });
+  if (!c) return;
+  const { g, W } = c;
+  // suelo y torre
+  c.line([-1e4, 0], [1e4, 0], '#22c55e', 3);
+  const bw = xmax * 0.22;
+  g.fillStyle = '#7f1d1d'; g.fillRect(c.X(-bw), c.Y(q.h), c.s * bw, c.s * q.h);
+  g.fillStyle = '#1d4ed8';
+  for (let k = 1; k < 9; k++) { const yy = q.h * k / 9; g.fillRect(c.X(-bw * 0.85), c.Y(yy + q.h * 0.04), c.s * bw * 0.7, c.s * q.h * 0.05); }
+  c.text([-bw, q.h], 'Trumpet Tower ' + fmt(q.h, 1) + ' m', '#fca5a5', 0, -8);
+  // trayectoria completa (punteada) y recorrida (sólida)
+  const N = 120; g.beginPath(); g.setLineDash([5, 5]); g.strokeStyle = '#64748b'; g.lineWidth = 1.5;
+  for (let i = 0; i <= N; i++) { const tt = q.tf * i / N; const x = q.v0 * tt, y = q.h - q.g / 2 * tt * tt;
+    i ? g.lineTo(c.X(x), c.Y(y)) : g.moveTo(c.X(x), c.Y(y)); } g.stroke(); g.setLineDash([]);
+  g.beginPath(); g.strokeStyle = '#3b82f6'; g.lineWidth = 3;
+  for (let i = 0; i <= N; i++) { const tt = t * i / N; const x = q.v0 * tt, y = q.h - q.g / 2 * tt * tt;
+    i ? g.lineTo(c.X(x), c.Y(y)) : g.moveTo(c.X(x), c.Y(y)); } g.stroke();
+  // equipo de seguridad en el alcance
+  g.fillStyle = '#22c55e'; g.fillRect(c.X(q.xf) - 14, c.Y(0) - 8, 28, 8);
+  c.text([q.xf, 0], 'x = ' + fmt(q.xf, 2) + ' m', '#86efac', -34, 22);
+  // Moira
+  const pos = [q.v0 * t, q.h - q.g / 2 * t * t];
+  c.dot(pos, '#fbbf24', 6);
+  c.arrow(pos, [pos[0] + q.v0 * 0.6 + 0.001, pos[1]], '#fbbf24');
+  g.fillStyle = '#6b84a8'; g.font = '11px sans-serif'; g.fillText('t = ' + fmt(t, 2) + ' s', 10, 18);
+}
+function updateP1() {
+  const q = p1Params(), t = p1.tNow * q.tf;
+  el('p1-out').innerHTML = [
+    ['Tiempo de caída', fmt(q.tf, 4) + ' s'],
+    ['Alcance x(t_f)', fmt(q.xf, 3) + ' m'],
+    ['v al aterrizar', '(' + fmt(q.v0, 2) + ', ' + fmt(q.vyf, 2) + ') m/s'],
+    ['Rapidez al aterrizar', fmt(Math.hypot(q.v0, q.vyf), 2) + ' m/s'],
+    ['Ecuación x(t)', fmt(q.v0, 2) + ' t'],
+    ['Ecuación y(t)', fmt(q.h, 1) + ' − ' + fmt(q.g / 2, 3) + ' t²'],
+    ['t actual', fmt(t, 3) + ' s'],
+    ['Posición actual', '(' + fmt(q.v0 * t, 2) + ', ' + fmt(q.h - q.g / 2 * t * t, 2) + ')'],
+  ].map(([k, v]) => `<div class="kv"><span class="text-slate-400">${k}</span><span>${v}</span></div>`).join('');
+  // tabla: t entero hasta caer + fila de aterrizaje
+  const rows = []; for (let k = 0; k < q.tf; k++) rows.push([k, false]); rows.push([q.tf, true]);
+  el('p1-table').querySelector('tbody').innerHTML = rows.map(([tt, last]) =>
+    `<tr class="${last ? 'pt' : ''}"><td>${fmt(tt, 3)}${last ? ' (suelo)' : ''}</td><td>${fmt(q.v0 * tt, 3)}</td><td>${fmt(q.h - q.g / 2 * tt * tt, 3)}</td><td>${fmt(q.v0, 2)}</td><td>${fmt(-q.g * tt, 3)}</td></tr>`).join('');
+  drawP1();
+}
+['p1-h', 'p1-v', 'p1-g'].forEach(id => el(id).addEventListener('input', () => { p1.tNow = 0; el('p1-t').value = 0; updateP1(); }));
+el('p1-reset').onclick = () => { el('p1-h').value = 250; el('p1-v').value = 5; el('p1-g').value = 9.8; p1.tNow = 0; el('p1-t').value = 0; updateP1(); };
+el('p1-t').addEventListener('input', e => { p1.tNow = parseFloat(e.target.value); updateP1(); });
+el('p1-play').onclick = () => {
+  if (p1.playing) { p1.playing = false; cancelAnimationFrame(p1.raf); el('p1-play').textContent = '▶ Reproducir'; return; }
+  p1.playing = true; el('p1-play').textContent = '⏸ Pausar'; if (p1.tNow >= 1) p1.tNow = 0;
+  let last = performance.now();
+  const loop = now => {
+    if (!p1.playing) return;
+    p1.tNow = Math.min(1, p1.tNow + (now - last) / 5000); last = now;   // 5 s de animación
+    el('p1-t').value = p1.tNow; updateP1();
+    if (p1.tNow >= 1) { p1.playing = false; el('p1-play').textContent = '▶ Reproducir'; return; }
+    p1.raf = requestAnimationFrame(loop);
+  };
+  p1.raf = requestAnimationFrame(loop);
+};
+
+/* =========================================================
+   PROBLEMA 2 — Espiral logarítmica
+   x=e^t cos t, y=e^t sin t
+   ========================================================= */
+const T_END = Math.PI / 2;
+const pos2 = t => [Math.exp(t) * Math.cos(t), Math.exp(t) * Math.sin(t)];
+const vel2 = t => [Math.exp(t) * (Math.cos(t) - Math.sin(t)), Math.exp(t) * (Math.cos(t) + Math.sin(t))];
+const acc2 = t => [-2 * Math.exp(t) * Math.sin(t), 2 * Math.exp(t) * Math.cos(t)];
+const speed2 = t => Math.hypot(...vel2(t));
+function simpson(f, a, b, n = 200) {      // n par
+  const h = (b - a) / n; let s = f(a) + f(b);
+  for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2);
+  return s * h / 3;
+}
+const p2 = { t: Math.PI / 4, playing: false, raf: 0 };
+
+function drawP2() {
+  const c = setupCanvas(el('cv-p2'), { xmin: -0.6, xmax: 1.9, ymin: -0.5, ymax: 5.3 });
+  if (!c) return;
+  const { g } = c, t = p2.t;
+  // ejes
+  c.line([-0.6, 0], [1.9, 0], '#334155', 1); c.line([0, -0.5], [0, 5.3], '#334155', 1);
+  c.text([1.9, 0], 'x', '#94a3b8', -12, -6); c.text([0, 5.3], 'y', '#94a3b8', 6, 12);
+  // espiral completa (tenue) y tramo recorrido
+  const N = 200; g.beginPath(); g.strokeStyle = '#475569'; g.lineWidth = 1.5; g.setLineDash([4, 4]);
+  for (let i = 0; i <= N; i++) { const p = pos2(T_END * i / N); i ? g.lineTo(c.X(p[0]), c.Y(p[1])) : g.moveTo(c.X(p[0]), c.Y(p[1])); } g.stroke(); g.setLineDash([]);
+  g.beginPath(); g.strokeStyle = '#3b82f6'; g.lineWidth = 3;
+  for (let i = 0; i <= N; i++) { const p = pos2(t * i / N); i ? g.lineTo(c.X(p[0]), c.Y(p[1])) : g.moveTo(c.X(p[0]), c.Y(p[1])); } g.stroke();
+  // extremos
+  c.dot(pos2(0), '#94a3b8', 4); c.text(pos2(0), 't=0 (1, 0)', '#94a3b8', 8, 16);
+  c.dot(pos2(T_END), '#94a3b8', 4); c.text(pos2(T_END), 't=π/2 (0, 4.81)', '#94a3b8', 8, 4);
+  // tangente, velocidad y aceleración
+  const P = pos2(t), v = vel2(t), a = acc2(t), vn = Math.hypot(...v) || 1;
+  const d = [v[0] / vn, v[1] / vn];
+  c.line([P[0] - d[0] * 1.6, P[1] - d[1] * 1.6], [P[0] + d[0] * 1.6, P[1] + d[1] * 1.6], '#a78bfa', 1.5, [6, 4]);
+  c.arrow(P, [P[0] + v[0] * 0.3, P[1] + v[1] * 0.3], '#fbbf24');
+  c.arrow(P, [P[0] + a[0] * 0.3, P[1] + a[1] * 0.3], '#f87171');
+  c.dot(P, '#ffffff', 6);
+  g.font = '12px sans-serif'; g.fillStyle = '#fbbf24'; g.fillText('v', 12, 20);
+  g.fillStyle = '#f87171'; g.fillText('a', 30, 20); g.fillStyle = '#a78bfa'; g.fillText('tangente', 48, 20);
+}
+function updateP2() {
+  const t = p2.t, P = pos2(t), v = vel2(t), a = acc2(t), dx = v[0];
+  const vertical = Math.abs(dx) < 1e-9 * Math.abs(v[1] || 1) + 1e-12;
+  const slope = vertical ? 'indefinida (vertical)' : fmt(v[1] / dx, 4);
+  const Lt = Math.SQRT2 * (Math.exp(t) - 1);
+  el('p2-out').innerHTML = [
+    ['t', fmt(t, 4) + ' s'],
+    ['Posición (x, y)', '(' + fmt(P[0]) + ', ' + fmt(P[1]) + ') m'],
+    ['Velocidad v', '(' + fmt(v[0]) + ', ' + fmt(v[1]) + ') m/s'],
+    ['Rapidez |v| = √2 eᵗ', fmt(Math.hypot(...v)) + ' m/s'],
+    ['Aceleración a', '(' + fmt(a[0]) + ', ' + fmt(a[1]) + ') m/s²'],
+    ['|a| = 2 eᵗ', fmt(Math.hypot(...a)) + ' m/s²'],
+    ['Pendiente dy/dx', slope],
+    ['Arco recorrido L(t)', fmt(Lt) + ' m'],
+    ['L total (fórmula)', fmt(Math.SQRT2 * (Math.exp(T_END) - 1), 4) + ' m'],
+    ['L total (Simpson)', fmt(simpson(speed2, 0, T_END), 4) + ' m'],
+  ].map(([k, val]) => `<div class="kv"><span class="text-slate-400">${k}</span><span>${val}</span></div>`).join('');
+  drawP2();
+}
+el('p2-t').addEventListener('input', e => { p2.t = parseFloat(e.target.value); updateP2(); });
+el('p2-pi4').onclick = () => { p2.t = Math.PI / 4; el('p2-t').value = p2.t; updateP2(); };
+el('p2-play').onclick = () => {
+  if (p2.playing) { p2.playing = false; cancelAnimationFrame(p2.raf); el('p2-play').textContent = '▶ Reproducir'; return; }
+  p2.playing = true; el('p2-play').textContent = '⏸ Pausar'; if (p2.t >= T_END - 1e-6) p2.t = 0;
+  let last = performance.now();
+  const loop = now => {
+    if (!p2.playing) return;
+    p2.t = Math.min(T_END, p2.t + (now - last) / 4000 * T_END); last = now;
+    el('p2-t').value = p2.t; updateP2();
+    if (p2.t >= T_END) { p2.playing = false; el('p2-play').textContent = '▶ Reproducir'; return; }
+    p2.raf = requestAnimationFrame(loop);
+  };
+  p2.raf = requestAnimationFrame(loop);
+};
+function buildP2Table() {
+  const labels = ['0', 'π/8', 'π/4', '3π/8', 'π/2'];
+  el('p2-table').querySelector('tbody').innerHTML = labels.map((lb, i) => {
+    const t = T_END * i / 4, P = pos2(t), v = vel2(t), a = acc2(t);
+    const vertical = Math.abs(v[0]) < 1e-9;
+    return `<tr class="${i === 2 ? 'pt' : ''}"><td>${lb}</td><td>${fmt(P[0])}</td><td>${fmt(P[1])}</td><td>${fmt(v[0])}</td><td>${fmt(v[1])}</td><td>${fmt(Math.hypot(...v))}</td><td>${fmt(a[0])}</td><td>${fmt(a[1])}</td><td>${vertical ? '∞' : fmt(v[1] / v[0])}</td></tr>`;
+  }).join('');
+}
+
+window.addEventListener('resize', () => { drawP1(); drawP2(); });
+window.addEventListener('load', () => {
+  const opts = { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false };
+  if (window.renderMathInElement) renderMathInElement(document.body, opts);
+  updateP1(); updateP2(); buildP2Table();
+  const h = location.hash.slice(1);
+  if (['resumen', 'p1', 'p2'].includes(h)) showTab(h);
+});
+</script>
+</body>
+</html>
